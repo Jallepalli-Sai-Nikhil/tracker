@@ -6,7 +6,12 @@ import pg from 'pg';
 const password = process.env.TRACKER_PASSWORD;
 if (!password || password.length < 20) throw new Error('Set TRACKER_PASSWORD to at least 20 characters');
 if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL');
-const db = new pg.Pool({connectionString:process.env.DATABASE_URL,max:3,connectionTimeoutMillis:5000});
+const connection = new URL(process.env.DATABASE_URL);
+connection.searchParams.delete('sslmode');
+const certificate = await fetch('https://supabase.com/prod-ca-2021.crt',{signal:AbortSignal.timeout(10000)});
+if (!certificate.ok) throw new Error('Could not load the Supabase root CA');
+const ca = await certificate.text();
+const db = new pg.Pool({connectionString:connection.href,ssl:{ca,rejectUnauthorized:true},max:3,connectionTimeoutMillis:5000});
 db.on('error',()=>console.error('Idle database connection failed'));
 await db.query(`CREATE SCHEMA IF NOT EXISTS career_tracker;
 CREATE TABLE IF NOT EXISTS career_tracker.snapshot (
