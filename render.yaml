@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: ai-career-learning-tracker
+    runtime: node
+    plan: starter
+    buildCommand: node --check server.mjs
+    startCommand: node server.mjs
+    healthCheckPath: /health
+    disk:
+      name: tracker-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24.13.0"
+      - key: TRACKER_DB
+        value: /var/data/tracker.sqlite
+      - key: TRACKER_PASSWORD
+        sync: false
